@@ -49,6 +49,54 @@ namespace StarChart.Controllers
             return Ok(allObjects);
         }
 
+        [HttpPost]
+        public IActionResult Create([FromBody]CelestialObject celestialObject)
+        {
+            _context.CelestialObjects.Add(celestialObject);
+            _context.SaveChanges();
+            return CreatedAtRoute("GetById", new { id = celestialObject.Id }, celestialObject);
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult Update(int id, CelestialObject celestialObject)
+        {
+            var objectToUpdate = _context.CelestialObjects.FirstOrDefault(x => x.Id == id);
+            if (objectToUpdate == null)
+                return NotFound();
+            objectToUpdate.Name = celestialObject.Name;
+            objectToUpdate.OrbitalPeriod = celestialObject.OrbitalPeriod;
+            objectToUpdate.OrbitedObjectId = celestialObject.OrbitedObjectId;
+            _context.Update(objectToUpdate);
+            _context.SaveChanges();
+            return NoContent();
+        }
+
+        [HttpPatch("{id}/{name}")]
+        public IActionResult RenameObject(int id, string name)
+        {
+            var objectToUpdate = _context.CelestialObjects.FirstOrDefault(x => x.Id == id);
+            if (objectToUpdate == null)
+                return NotFound();
+            objectToUpdate.Name = name;
+            _context.Update(objectToUpdate);
+            _context.SaveChanges();
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            var objectToDelete = _context.CelestialObjects.FirstOrDefault(x => x.Id == id);
+            if (objectToDelete == null)
+                return NotFound();
+            SetSatellites(objectToDelete);
+            var allObjectsToRemove = objectToDelete.Satellites.ToList();
+            allObjectsToRemove.Add(objectToDelete);
+            _context.RemoveRange(allObjectsToRemove);
+            _context.SaveChanges();
+            return NoContent();
+        }
+
         private void SetSatellites(CelestialObject celestialObject)
         {
             if (celestialObject == null)
